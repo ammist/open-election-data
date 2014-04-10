@@ -1,6 +1,6 @@
 $(document).ready( function() { 
-	var oakTable = new dataTable("http://data.oaklandnet.com/resource/68fg-z9fi.json");
-	oakTable.makeTable("dataDump");
+	// var oakTable = new dataTable("http://data.oaklandnet.com/resource/68fg-z9fi.json");
+	// oakTable.makeTable("dataDump");
 
 });
 

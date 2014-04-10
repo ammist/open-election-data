@@ -74,7 +74,7 @@
 
         var fill = d3.scale.ordinal()
             .domain(d3.range(4))
-            .range(["#333333", "#FFDD89", "#957244", "#F26223"]);
+            .range(["#333333", "#FFDD89", "#755224", "#F26223"]);
 
         var svg = d3.select("body").append("svg")
             .attr("width", width)
@@ -120,9 +120,12 @@
         var group = svg.selectAll(".group")
           .data(chord.groups)
           .enter().append("g")
-          .attr("class", "group");
+          .attr("class", "group")
+          .on("mouseover", fade(.1))
+          .on("mouseout", fade(1));
 
-        // Add a mouseover title.
+
+        // Add a mouseover tooltip title with the full label.
         group.append("title").text(function(d, i) {
           return labels[i];
         });
@@ -138,15 +141,15 @@
         var groupText = group.append("text")
           .attr("x", 6)
           .attr("dy", 15)
-          .attr("fill", "#44aabb");
+          .attr("fill", function (d) { return "#667788";});
 
         groupText.append("textPath")
           .attr("xlink:href", function(d, i) { return "#group" + i; })
-          .text(function(d, i) { return labels[i].replace(/ for |mayor|oakland(?!$)/ig, ""); });
+          .text(function(d, i) { return labels[i].replace(/ for |mayor|oakland(?!$)/ig, ""); }); // truncate for better fit.  "for" is part of California and "Oakland" is a standalone locations, so we protect the regex match a little.
 
         // Remove the labels that don't fit. :(
          groupText.filter(function(d, i) { return groupPath[0][i].getTotalLength() / 2 - 16 < this.getComputedTextLength(); })
-           .remove();
+          .remove();
 
         // /Shameless
 
@@ -165,9 +168,9 @@
         function fade(opacity) {
           return function(g, i) {
             svg.selectAll(".chord path")
-                .filter(function(d) { return d.source.index != i && d.target.index != i; })
+              .filter(function(d) { return d.source.index != i && d.target.index != i; })
               .transition()
-                .style("opacity", opacity);
+              .style("opacity", opacity);
           };
         }
       }
