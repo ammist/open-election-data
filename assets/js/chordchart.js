@@ -49,27 +49,19 @@
       }
     }
     console.log(outputMatrix);
-    return outputMatrix;
+
+    return {matrix: outputMatrix,
+            labels: candidates.concat(locations)};
   }
 
-	this.Chordchart = (function(){
+  this.Chordchart = (function(){
 
     function Chordchart() {
       this.init = function(data) {
-        var matrix = mangleMatrix(data);
+        var mangled = mangleMatrix(data);
+        var matrix = mangled.matrix;
+        var labels = mangled.labels;
       
-        // From http://mkweb.bcgsc.ca/circos/guide/tables/
-        // var matrix = [
-        //   [11975,  5871, 8916, 2868, 100, 200, 300, 400],
-        //   [ 1951, 10048, 2060, 6171, 100, 200, 300, 400],
-        //   [ 8010, 16145, 8090, 8045, 100, 200, 300, 400],
-        //   [ 1013,   990,  940, 6907, 100, 200, 300, 400],
-        //   [11975,  5871, 8916, 2868, 100, 200, 300, 400],
-        //   [ 1951, 10048, 2060, 6171, 100, 200, 300, 400],
-        //   [ 8010, 16145, 8090, 8045, 100, 200, 300, 400],
-        //   [ 1013,   990,  940, 6907, 100, 200, 300, 400]
-        // ];
-
         var chord = d3.layout.chord()
             .padding(.05)
             .sortSubgroups(d3.descending)
@@ -82,22 +74,13 @@
 
         var fill = d3.scale.ordinal()
             .domain(d3.range(4))
-            .range(["#000000", "#FFDD89", "#957244", "#F26223"]);
+            .range(["#333333", "#FFDD89", "#957244", "#F26223"]);
 
         var svg = d3.select("body").append("svg")
             .attr("width", width)
             .attr("height", height)
           .append("g")
             .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-
-        svg.append("g").selectAll("path")
-            .data(chord.groups)
-          .enter().append("path")
-            .style("fill", function(d) { return fill(d.index); })
-            .style("stroke", function(d) { return fill(d.index); })
-            .attr("d", d3.svg.arc().innerRadius(innerRadius).outerRadius(outerRadius))
-            .on("mouseover", fade(.1))
-            .on("mouseout", fade(1));
 
         var ticks = svg.append("g").selectAll("g")
             .data(chord.groups)
@@ -132,6 +115,41 @@
             .style("fill", function(d) { return fill(d.target.index); })
             .style("opacity", 1);
 
+        // Shamelessly from mbostock's Uber SF ride demonstration
+        // Add a group per data element to bind labels and a tooltip.
+        var group = svg.selectAll(".group")
+          .data(chord.groups)
+          .enter().append("g")
+          .attr("class", "group");
+
+        // Add a mouseover title.
+        group.append("title").text(function(d, i) {
+          return labels[i];
+        });
+
+        // Add the group arc
+        var groupPath = group.append("path")
+          .attr("id", function(d, i) { return "group" + i; })
+          .style("fill", function(d) { return fill(d.index); })
+          .style("stroke", function(d) { return fill(d.index); })
+          .attr("d", d3.svg.arc().innerRadius(innerRadius).outerRadius(outerRadius));
+
+        // Add a text label.
+        var groupText = group.append("text")
+          .attr("x", 6)
+          .attr("dy", 15)
+          .attr("fill", "#44aabb");
+
+        groupText.append("textPath")
+          .attr("xlink:href", function(d, i) { return "#group" + i; })
+          .text(function(d, i) { return labels[i].replace(/ for |mayor|oakland(?!$)/ig, ""); });
+
+        // Remove the labels that don't fit. :(
+         groupText.filter(function(d, i) { return groupPath[0][i].getTotalLength() / 2 - 16 < this.getComputedTextLength(); })
+           .remove();
+
+        // /Shameless
+
         // Returns an array of tick angles and labels, given a group.
         function groupTicks(d) {
           var k = (d.endAngle - d.startAngle) / d.value;
@@ -156,57 +174,6 @@
       d3.csv('assets/data/data.csv', this.init.bind(this));
     }	
     return Chordchart;
-    // // format = candidate, total, location
-    // Chordchart.prototype.amounts = {};
-    // 
-    // Chordchart.prototype.relMatrix= {};
-    // 
-    // function Chordchart(){
-    //   
-    //        var width = 720,
-    //       height = 720,
-    //       outerRadius = Math.min(width, height) / 2 - 10,
-    //       innerRadius = outerRadius - 24;
-    // 
-    //   var formatPercent = d3.format(".1%");
-    // 
-    //   var arc = d3.svg.arc()
-    //       .innerRadius(innerRadius)
-    //       .outerRadius(outerRadius);
-    // 
-    //   var layout = d3.layout.chord()
-    //       .padding(.04)
-    //       .sortSubgroups(d3.descending)
-    //       .sortChords(d3.ascending);
-    // 
-    //   var path = d3.svg.chord()
-    //       .radius(innerRadius);
-    // 
-    //   var svg = d3.select("body").append("svg")
-    //       .attr("width", width)
-    //       .attr("height", height)
-    //     .append("g")
-    //       .attr("id", "circle")
-    //       .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-    // 
-    //   svg.append("circle")
-    //       .attr("r", outerRadius);
-    // 
-    // 
-    //   //load the input data
-    //   
-    //   d3.csv('assets/data/data.csv', function(data){
-    //     
-    //   });
-    //   
-    //   // create the matrix of relationships
-    //   
-    //   // draw the chord graph
-    //   
-    // }
-    // 
-    // return Chordchart;
-		
 	})();
 		
 }.call(this));
